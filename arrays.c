@@ -29,7 +29,7 @@ int main(){
 
         N.B.: per svolgere l'esercizio si deve utilizzare un array
             e cicli FOR
-*/
+
 
 int main(){
     int array[5];
@@ -57,4 +57,31 @@ int main(){
     
     return 0;
 
+}
+*/
+
+//Array multidimensionali:
+
+int main(){
+
+    int matrice[2][3];
+
+    int riga = 0;
+    int colonna = 0;
+
+    for (riga = 0; riga < 2; riga++){
+        for (colonna = 0; colonna < 3; colonna ++){
+            printf("Input [%d][%d] \n", riga, colonna);
+            scanf("%d", &matrice[riga][colonna]);
+        }
+    }
+
+    for (riga = 0; riga < 2; riga++){
+        for (colonna = 0; colonna < 3; colonna ++){
+            printf("%d", matrice[riga][colonna]);
+        }
+    }
+    printf("\n");
+
+    return 0;
 }
