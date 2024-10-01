@@ -37,7 +37,7 @@ nell'array.
     -Successivamente, attraverso il puntatore, deve sostituire ogni elemento dell'array
     che e' un ciffra con il carattere *.
     -Infine stampare l'array di char.
-*/
+
 
 #include <stdio.h>
 
@@ -61,3 +61,14 @@ int main(){
     return 0;
 
 }
+*/
+
+//esercizio 7:
+/* Si scriva un programma che dichiara due array di interi di 5 elementi 
+e permette all'utente di riempirli.
+    - Successivamente, tramite l'utilizzo di due puntatori, inverte il primo
+    elemento di array1 
+
+
+
+*/
