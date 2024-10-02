@@ -40,7 +40,6 @@ nell'array.
 
 
 #include <stdio.h>
-
 int main(){
     
     char stringa[10];
@@ -67,8 +66,55 @@ int main(){
 /* Si scriva un programma che dichiara due array di interi di 5 elementi 
 e permette all'utente di riempirli.
     - Successivamente, tramite l'utilizzo di due puntatori, inverte il primo
-    elemento di array1 
-
-
-
+    elemento di array1 con l'ultimo di array2, il secondo elemento di array1 con il penultimo
+    di array2 e cosi via...
+    - Infine stampa i due array modificati
 */
+
+#include <stdio.h>
+
+int main(){
+    int array1[5];
+    int array2[5];
+
+    int *p1;
+    int *p2;
+
+    p1 = &array1[0];
+    p2 = &array2[4];
+
+    int i = 0;
+    for(i = 0; i < 5; i++){ 
+        
+        /*The function scanf needs to modify the variable you're reading data into. 
+        Since C passes arguments by value, the function wouldn't be able 
+        to modify the original variable unless it receives a pointer to that variable.
+
+    When you call scanf("%d", &array1[i]);, you are passing the address of array1[i] (using &), 
+    so scanf can store the value entered by the user directly into that memory location.
+    Without &, scanf would only receive the value stored in the variable, but it wouldn't know where to store the input. */
+
+        printf("Input array1[%d]: ", i);
+        scanf("%d", &array1[i]);    //This reads an integer input from the user and stores it in the i-th position of array1. 
+                                    //The & is used because scanf requires the address of the variable to store the input.
+        printf("\n Input array2[%d]: ", i);
+        scanf("%d", &array2[i]);
+    }
+    
+    for(i = 0; i < 5; i++){
+        int a = *p1;
+        *p1 = *p2;
+        *p2 = a;
+        p1++;
+        p2--;
+    }
+
+    printf("\n Stampo gli array...\n");
+    for(i = 0; i < 5; i++){
+        printf("ARRAY1 array1[%d]: %d \n", i, array1[i]);
+        printf("ARRAY2 array2[%d]: %d \n", i, array2[i]);
+    }
+
+    return 0;
+
+}
