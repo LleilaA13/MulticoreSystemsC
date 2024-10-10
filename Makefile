@@ -1,11 +1,11 @@
 # Variables
 CC = mpicc                      # Use mpicc for MPI programs
-CFLAGS = -Wall -g        # Compiler flags
-LDFLAGS =                        # Add any additional libraries here (if needed)
-SRC = mpilect4helloworld.c     # Source files
+CFLAGS = -Wall -g 			     # Compiler flags
+LDFLAGS = #-lm                       # Add any additional libraries here (if needed)
+SRC = lec6_2.c     # Source files
 OBJ = $(SRC:.c=.o)               # Object files
-TARGET = esempioMPI          # Name of the final executable
-
+TARGET = lec6        # Name of the final executable
+#TOSSES = 1000000     # Number of tosses for the Monte Carlo simulation
 # Number of processes (for running the MPI program, not for compiling)
 NP = 4                           # Default number of processes
 
@@ -23,9 +23,9 @@ $(TARGET): $(OBJ)
 # Clean rule to remove compiled files
 .PHONY: clean
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -f $(OBJ) $(TARGET) 
 
 # Rule to run the MPI program with the specified number of processes
 .PHONY: run
 run: $(TARGET)
-	mpirun -np $(NP) ./$(TARGET)
+	mpirun -np $(NP) ./$(TARGET) 
