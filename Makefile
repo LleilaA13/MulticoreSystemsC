@@ -1,10 +1,10 @@
 # Variables
 CC = mpicc                      # Use mpicc for MPI programs
 CFLAGS = -Wall -g 			     # Compiler flags
-LDFLAGS = #-lm                       # Add any additional libraries here (if needed)
-SRC = lec6_2.c     # Source files
+LDFLAGS = -lm                       # Add any additional libraries here (if needed)
+SRC = multicore-programming/lec5/ring.c     # Source files
 OBJ = $(SRC:.c=.o)               # Object files
-TARGET = lec6        # Name of the final executable
+TARGET = ring        # Name of the final executable
 #TOSSES = 1000000     # Number of tosses for the Monte Carlo simulation
 # Number of processes (for running the MPI program, not for compiling)
 NP = 4                           # Default number of processes
