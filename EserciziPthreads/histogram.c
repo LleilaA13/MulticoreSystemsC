@@ -53,7 +53,7 @@ int main(){
     for (int i = 0; i < bins; i++) {
         printf("Bin %d: %d\n", i, histogram[i]);
     }
-
+    //free(threads);
     return 0;
 }
 
