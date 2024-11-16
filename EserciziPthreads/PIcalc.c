@@ -39,12 +39,12 @@ void* calc_partial_sums(void* arg){
 
 int main(){
     pthread_t thread_handles[num_threads];
-    int threadIDs[num_threads];
+    int* ids = (int*) malloc(sizeof(int)*num_threads);
     pthread_mutex_init(&mutex, NULL);
 
     for(int i = 0; i < num_threads; i++){
-        threadIDs[i] = i;
-        pthread_create(&thread_handles[i], NULL, calc_partial_sums, &threadIDs[i]);
+        ids[i] = i;
+        pthread_create(&thread_handles[i], NULL, calc_partial_sums, &(ids[i]));
     }
 
     for(int i = 0; i < num_threads; i++){
@@ -52,6 +52,6 @@ int main(){
     }
     pthread_mutex_destroy(&mutex);
     printf("Pi calculated is: %f \n", 4.0 * sum);
-    //free(thread_handles);
+    free(ids);
     return 0;
 }
