@@ -12,23 +12,36 @@ memory.
 #include <stdbool.h>
 #include <time.h>
 
-
-
-int* gen_mat(int rows, int cols, int rank){
-    int * matrix;
-    matrix = (int*)malloc(rows * cols * sizeof(int));
-    return matrix;
+int* matrix_allocation(int rows, int cols){
+    return (int*)malloc(rows * cols* sizeof(int));
+}
+void gen_matrix(int* matrix, int rows, int cols){
+    for(int i = 0; i < rows; i++){
+        for(int j = 0; j < cols; j++){
+            matrix[i * cols + j] = (int)(rand() % 10);
+        }
+    }
+}
+void seq_check_mul(int* mat1, int* mat2, int* seqres_mat, int row1, int col1, int col2) {
+    for (int i = 0; i < row1; i++) {
+        for (int j = 0; j < col2; j++) {
+            seqres_mat[i * col2 + j] = 0;
+            for (int k = 0; k < col1; k++) {
+                seqres_mat[i * col2 + j] += mat1[i * col1 + k] * mat2[k * col2 + j];
+            }
+        }
+    }
 }
 
 int main(int argc, char** argv){
     int rank, size;
-    
+
     //? MPI initialization:
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, rank);
-    MPI_Comm_size(MPI_COMM_WORLD, size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    int scatter_proc = size - 1;
+    int scatter_root = size - 1;
 
     int row1 = atoi(argv[1]);
     int col1 = atoi(argv[2]);
@@ -36,45 +49,116 @@ int main(int argc, char** argv){
     int row2 = atoi(argv[3]);
     int col2 = atoi(argv[4]);
 
-
     if (col1 != row2){
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    int dim1 = row1 * col1;
+    //int dim1 = row1 * col1;
     int dim2 = row2 * col2;
 
-    int* matrix1 = gen_mat(row1, col1, rank);
-    int* matrix2 = gen_mat(row2, col2, rank);
-    int* partialmat1 = new_mat((row1 / size), col1, rank);
-    int* res_partial = new_mat((row1 / size), col2, rank);
+    int* mat1 = NULL;
+    int* mat2 = NULL;
+    int* res_mat = NULL;
 
-    if(rank == size - 1){
-        for (int i = 0; i < dim1; i++){
-            matrix1[i] = rand() % 10;
-        }
+    
+        mat1 = matrix_allocation(row1, col1);
+        mat2 = matrix_allocation(row2, col2);
+        res_mat = matrix_allocation(row1, col2);
 
-        for (int i = 0; i < dim2; i++){
-            matrix2 = rand() % 10;
-        }
-    }
+        gen_matrix(mat1, row1, col1);
+        gen_matrix(mat2, row2, col2);
 
-    int rows_per_proc = (row1 / size) * col1;
+    int rows_per_proc = (row1 / size);
+    //int remainder = row1 % size; 
+    int* local_mat1 = (int*)malloc(rows_per_proc * col1 * sizeof(int));
+    int* localres_mat = (int*)malloc(rows_per_proc * col2 * sizeof(int));
 
-    MPI_Bcast(matrix2, dim2, MPI_INT, scatter_proc, MPI_COMM_WORLD);
+    MPI_Bcast(mat2, dim2, MPI_INT, 0, MPI_COMM_WORLD);
 
-    if (rank == size -1){
-        MPI_Scatter(matrix1, rows_per_proc, MPI_INT, MPI_IN_PLACE, rows_per_proc, MPI_INT, (size - 1), MPI_COMM_WORLD);
-        
-        for (int r = 0; r < (row1 / size); r++) {     // For each row of mat_1
-            for (int c = 0; c < col2; c++) {          // For each col of mat_2
-                int val = 0;
-                for (int e = 0; e < col1; e++) {      // For each element of the column of mat_1
-                    val = val + matrix1[(r * col1) + e] + matrix2[(c * col1) + e];
-                }
-                res_partial[(r * col2) + c] = val;
+    MPI_Scatter(mat1, rows_per_proc * col1, MPI_INT, local_mat1, rows_per_proc * col1, MPI_INT, 0, MPI_COMM_WORLD);
+
+
+    for (int i = 0; i < rows_per_proc; i++) {
+        for (int j = 0; j < col2; j++) {
+            localres_mat[i * col2 + j] = 0;
+            for (int k = 0; k < col1; k++) {
+                localres_mat[i * col2 + j] += local_mat1[i * col1 + k] * mat2[k * col2 + j];
             }
-
+        }
     }
 
-}
+    
+
+    MPI_Gather(localres_mat, rows_per_proc * col2, MPI_INT, res_mat, rows_per_proc * col2, MPI_INT, 0, MPI_COMM_WORLD);
+        // Rank 0 will print the result matrix and check correctness
+    if (rank == 0) {
+        printf("Matrix 1:\n");
+        for (int i = 0; i < row1; i++) {
+            for (int j = 0; j < col1; j++) {
+                printf("%d ", mat1[i * col1 + j]);
+            }
+            printf("\n");
+        }
+
+        printf("Matrix 2:\n");
+        for (int i = 0; i < row2; i++) {
+            for (int j = 0; j < col2; j++) {
+                printf("%d ", mat2[i * col2 + j]);
+            }
+            printf("\n");
+        }
+
+        printf("Result Matrix (PARALLEL):\n");
+        for (int i = 0; i < row1; i++) {
+            for (int j = 0; j < col2; j++) {
+                printf("%d ", res_mat[i * col2 + j]);
+            }
+            printf("\n");
+        }
+
+    //! SEQUENTIAL CHECK:
+        int* seqres_mat = matrix_allocation(row1, col2);
+        seq_check_mul(mat1, mat2, seqres_mat, row1, col1, col2);
+
+        printf("Result Matrix(SEQUENTIAL):\n");
+        for (int i = 0; i < row1; i++) {
+            for (int j = 0; j < col2; j++) {
+                printf("%d ", seqres_mat[i * col2 + j]);
+            }
+            printf("\n");
+        }
+
+    //! Compare the results
+        bool correct = true;
+        for (int i = 0; i < row1; i++) {
+            for (int j = 0; j < col2; j++) {
+                if (res_mat[i * col2 + j] != seqres_mat[i * col2 + j]) {
+                    correct = false;
+                    break;
+                }
+            }
+        }
+
+        if (correct) {
+            printf("The results are correct!\n");
+        } else {
+            printf("The results are incorrect!\n");
+        }
+
+        free(seqres_mat);
+    }
+
+    // Clean up
+    free(mat1);
+    free(mat2);
+    free(res_mat);
+    free(local_mat1);
+    free(localres_mat);
+
+    MPI_Finalize();
+    return 0;
+    }
+
+
+
+
